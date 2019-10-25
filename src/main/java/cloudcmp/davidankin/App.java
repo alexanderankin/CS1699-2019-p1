@@ -1,4 +1,4 @@
-// package cloudcmp.davidankin;
+package cloudcmp.davidankin;
 
 // /**
 //  * Hello world!
@@ -14,7 +14,7 @@
 
 
 import io.vertx.core.AbstractVerticle;
-public class Server extends AbstractVerticle {
+public class App extends AbstractVerticle {
   public void start() {
     vertx.createHttpServer().requestHandler(req -> {
       req.response()

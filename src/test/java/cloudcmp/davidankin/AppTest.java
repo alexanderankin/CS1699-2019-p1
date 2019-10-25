@@ -1,4 +1,4 @@
-// package cloudcmp.davidankin;
+package cloudcmp.davidankin;
 
 // import junit.framework.Test;
 // import junit.framework.TestCase;
