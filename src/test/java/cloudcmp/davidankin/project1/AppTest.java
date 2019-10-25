@@ -1,15 +1,15 @@
-package cloudcmp.davidankin;
+package cloudcmp.davidankin.project1;
 
-// import junit.framework.Test;
-// import junit.framework.TestCase;
-// import junit.framework.TestSuite;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 // /**
 //  * Unit test for simple App.
 //  */
-// public class AppTest 
-//   extends TestCase
-// {
+public class AppTest 
+  extends TestCase
+{
 //   /**
 //    * Create the test case
 //    *
@@ -31,8 +31,8 @@ package cloudcmp.davidankin;
 //   /**
 //    * Rigourous Test :-)
 //    */
-//   public void testApp()
-//   {
-//     assertTrue( true );
-//   }
-// }
+  public void testApp()
+  {
+    assertTrue( true );
+  }
+}
