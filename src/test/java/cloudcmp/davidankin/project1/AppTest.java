@@ -1,38 +1,17 @@
 package cloudcmp.davidankin.project1;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-// /**
-//  * Unit test for simple App.
-//  */
-public class AppTest 
-  extends TestCase
-{
-//   /**
-//    * Create the test case
-//    *
-//    * @param testName name of the test case
-//    */
-//   public AppTest( String testName )
-//   {
-//     super( testName );
-//   }
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
 
-//   /**
-//    * @return the suite of tests being tested
-//    */
-//   public static Test suite()
-//   {
-//     return new TestSuite( AppTest.class );
-//   }
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.Test;
 
-//   /**
-//    * Rigourous Test :-)
-//    */
-  public void testApp()
-  {
-    assertTrue( true );
+// @ExtendWith(VertxExtension.class)
+public class AppTest {
+  @Test
+  void addition() {
+    assertEquals(2, 2);
   }
 }
