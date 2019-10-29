@@ -1,35 +1,37 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { Component } from 'react';
 import './App.css';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-          hello ok 
-          hello ok 
-          hello ok 
-          hello ok 
-          hello ok 
-          hello ok 
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+// import { Center, Wrap } from './utils.jsx';
+import { Home } from './components.jsx';
+
+import events from './events';
+
+class App extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { setup: false };
+  }
+  componentDidMount() {
+    console.log("listening on setup");
+    events.on('setup', () => { console.log('this.setState({ setup: true })') });
+    events.on('setup', () => { this.setState({ setup: true }) });
+  }
+  render() {
+    return (
+      <div className="container pt-5">
+        <div className="row">
+          <div className="col">
+            <div className="card">
+              <div className="card-body">
+                <p>Daa85 Search Engine</p>
+                <Home state={this.state}></Home>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 }
 
 export default App;
