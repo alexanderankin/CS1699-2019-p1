@@ -1,38 +1,87 @@
 import React, { Component } from 'react';
 
-import { Center } from './utils.jsx';
+import utils from './myutils.jsx';
 import events from './events';
+
+export class Loaded extends Component {
+  render() {
+    return <div>
+      <div className="text-center">
+        <h4 className="card-title">Engine was loaded & Indicies constructed</h4>
+      </div>
+
+      <div className="text-left">
+      </div>
+      <div className="text-center">
+        <p className="card-text mt-5 mb-5">Please select action</p>
+        <div><button type="button" class="btn btn-outline-secondary mb-2">Search for Term</button></div>
+        <div><button type="button" class="btn btn-outline-secondary mb-2">Top-N</button></div>
+      </div>
+    </div>;
+  }
+}
+
+export class Initial extends Component {
+  constructor(props) {
+    super(props);
+    this.onUploadStatusChange = this.onUploadStatusChange.bind(this);
+    this.onClickConstruct     = this.onClickConstruct.bind(this);
+    this.state = { uploaded: false, formRef: null };
+  }
+
+  onUploadStatusChange(status, formRef) {
+    this.setState({ uploaded: status, formRef });
+  }
+
+  async onClickConstruct() {
+    var data = new FormData(this.state.formRef);
+    var status = 'error';
+    if (status.indexOf('error') > -1) {
+      this.setState({ message: 'Try again' })
+    } else {
+      events.emit('setup');
+    }
+  }
+
+  render() {
+    var FileInput = utils.FileInput;
+    return (
+      <div>
+        <h4 className="card-title">Card title</h4>
+        <FileInput onUploadStatusChange={this.onUploadStatusChange}></FileInput>
+        <div style={{ flexBasis: '100%' }}></div>
+        <button
+          type="button"
+          className="btn btn-outline-secondary w-f-c"
+          style={{ margin: '0 auto'}}
+          onClick={this.onClickConstruct}
+          disabled={!this.state.uploaded}
+          >
+          Construct Inverted Indicies
+        </button>
+        {this.state.message ? <div className="mt-2">
+            <div class="alert alert-warning" role="alert">
+              <strong>Error!</strong>
+              <div><p>{this.state.message}</p></div>
+              <div>
+                <button
+                  type="button"
+                  class="btn btn-outline-dark btn-sm"
+                  onClick={() => this.setState({ message: '' })}>
+                  Got it
+                </button>
+              </div>
+            </div>
+          </div> : null}
+      </div>
+    );
+  }
+}
 
 export class Home extends Component {
   render() {
-    if (!this.props.setup)
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100vh - 210px)' }}>
-        <div style={{ maxWidth: '50%' }}>
-          <Center>
-            <h4 className="card-title" style={{ margin: '80px 0 80px 0' }}>Card title</h4>
-            <button
-              type="button"
-              className="btn btn-outline-secondary btn-sm"
-              style={{ marginBottom: 120 }}
-              >
-              Choose Files
-              </button>
-          </Center>
-          <div style={{ width: '100%', height: 300 }}>
-            <button
-              type="button"
-              className="btn btn-outline-secondary"
-              onClick={() => {
-                window.events = events;
-                events.emit('setup');
-              }}
-              >
-              Construct Inverted Indicies
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    if (!this.props.state.setup)
+      return <Initial></Initial>
+    return <Loaded></Loaded>;
   }
 }
