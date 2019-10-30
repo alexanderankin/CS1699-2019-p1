@@ -2,6 +2,7 @@ package cloudcmp.davidankin.project1;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.handler.LoggerHandler;
@@ -13,30 +14,21 @@ import io.vertx.core.logging.LoggerFactory;
 
 import java.util.Set;
 import java.util.Iterator;
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 public class App extends AbstractVerticle {
   private final Logger LOGGER = LoggerFactory.getLogger(App.class);
   private SSH ssh;
   public void start() {
-    try {
-      ssh = new SSH();
-      // ssh.connect("unixs.cssd.pitt.edu", "daa85");
-      // LOGGER.error("Connected SSH");
-    } catch (Exception e) {
-      LOGGER.error("SSH Failed to connect");
-      LOGGER.error(e.toString());
-    }
+    ssh = new SSH();
+    ssh.connect("unixs.cssd.pitt.edu", "daa85");
 
-    Router router = Router.router(vertx);
-    router.route().handler(BodyHandler.create());
-    router.route().handler(LoggerHandler.create());
-    router.route("/home").blockingHandler(req -> {
-      req.response()
-        .putHeader("content-type", "text/plain")
-        .end("Hello from Vert.x!");
-    });
-    router.post("/upload").blockingHandler(ctx -> {
+    Router uploadRouter = Router.router(vertx);
+    uploadRouter.route().handler(BodyHandler.create());
+    uploadRouter.post("/").blockingHandler(ctx -> {
       LOGGER.error("have post route");
       int counter = 0;
       try {
@@ -47,9 +39,11 @@ public class App extends AbstractVerticle {
           LOGGER.error("name:             " + f.name());
           LOGGER.error("size:             " + f.size());
           LOGGER.error("uploadedFileName: " + f.uploadedFileName());
-          File file = new File(f.uploadedFileName());
-          file.renameTo(new File(f.fileName()));
-          file = null;
+
+          Path from = Paths.get(f.uploadedFileName());
+          Path to = Paths.get("file-uploads", f.fileName());
+          LOGGER.error("moving from " + from + " to " + to);
+          Path temp = Files.move(from, to, StandardCopyOption.REPLACE_EXISTING);
         }
         LOGGER.error("have counter " + counter + " and size " + ctx.fileUploads().size());
 
@@ -61,8 +55,26 @@ public class App extends AbstractVerticle {
         e.printStackTrace();
         ctx.response()
           .putHeader("content-type", "text/plain")
-          .end("hey " + counter);
+          .end("error");
       }
+    });
+
+    Router mainRouter = Router.router(vertx);
+    mainRouter.route().handler(LoggerHandler.create());
+    mainRouter.mountSubRouter("/upload", uploadRouter);
+
+    Router router = mainRouter;
+    router.route("/home").handler(req -> {
+      req.response()
+        .putHeader("content-type", "text/plain")
+        .end("Hello from Vert.x!");
+    });
+    router.post("/json").handler(BodyHandler.create()).handler(req -> {
+      JsonObject body = req.getBodyAsJson();
+      body.put("ok", "ok");
+      req.response()
+        .putHeader("content-type", "application/json")
+        .end(body.toString());
     });
 
     String jarResourceName = "webroot";
@@ -72,7 +84,7 @@ public class App extends AbstractVerticle {
     });
 
     HttpServer s = vertx.createHttpServer();
-    s.requestHandler(router);
+    s.requestHandler(mainRouter);
     s.listen(8080);
   }
 }
