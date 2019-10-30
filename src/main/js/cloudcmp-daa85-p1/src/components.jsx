@@ -35,10 +35,15 @@ export class Initial extends Component {
 
   async onClickConstruct() {
     var data = new FormData(this.state.formRef);
-    var status = 'error';
+    var response = await fetch('/upload', {
+      method: 'post',
+      body: data
+    });
+    var status = await response.text();
     if (status.indexOf('error') > -1) {
       this.setState({ message: 'Try again' })
     } else {
+      this.setState({ message: '' })
       events.emit('setup');
     }
   }
