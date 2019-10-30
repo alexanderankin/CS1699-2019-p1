@@ -1,6 +1,7 @@
 package cloudcmp.davidankin.project1;
 
 import net.schmizz.sshj.SSHClient;
+import net.schmizz.sshj.transport.verification.PromiscuousVerifier;
 import net.schmizz.sshj.userauth.password.PasswordFinder;
 import net.schmizz.sshj.userauth.password.Resource;
 import net.schmizz.sshj.xfer.FileSystemFile;
@@ -44,6 +45,7 @@ public class SSH {
   public boolean upload(String from, String to) {
     boolean error = false;
     SSHClient client = new SSHClient();
+    client.addHostKeyVerifier(new PromiscuousVerifier());
     try {
       client.connect(host);
       client.authPassword(this.username, this.passwordFinder);

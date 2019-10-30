@@ -70,6 +70,13 @@ public class App extends AbstractVerticle {
         .end("Hello from Vert.x!");
     });
     router.post("/json").handler(BodyHandler.create()).handler(req -> {
+      LOGGER.error("uploading");
+      try {
+        ssh.upload("/home/toor/examples.desktop", null);
+      } catch (Exception e) {
+        LOGGER.error("ok bad");
+        LOGGER.error(e.toString());
+      }
       JsonObject body = req.getBodyAsJson();
       body.put("ok", "ok");
       req.response()
