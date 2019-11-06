@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 
 import md5 from 'md5';
 import moment from 'moment';
+import events from './events';
 
 class FileInput extends Component {
   constructor(props) {
@@ -33,6 +34,8 @@ class FileInput extends Component {
       return;
     }
 
+    events.emit('mainloading', true);
+
     // read files
     var length = files.length;
     var filePromises = [];
@@ -56,6 +59,7 @@ class FileInput extends Component {
     var fileReads = await Promise.all(filePromises);
     this.setState({ files: fileReads });
     this.props.onUploadStatusChange(true, this.formRef.current);
+    events.emit('mainloading', false);
   }
 
   render() {

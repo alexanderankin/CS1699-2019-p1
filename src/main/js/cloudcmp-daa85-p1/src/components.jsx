@@ -26,7 +26,8 @@ export class Initial extends Component {
     super(props);
     this.onUploadStatusChange = this.onUploadStatusChange.bind(this);
     this.onClickConstruct     = this.onClickConstruct.bind(this);
-    this.state = { uploaded: false, formRef: null };
+    this.state = { uploaded: false, formRef: null, loading: false };
+    events.on('mainloading', (loading) => this.setState({ loading }));
   }
 
   onUploadStatusChange(status, formRef) {
@@ -34,12 +35,14 @@ export class Initial extends Component {
   }
 
   async onClickConstruct() {
+    events.emit('mainloading', true);
     var data = new FormData(this.state.formRef);
     var response = await fetch('/upload', {
       method: 'post',
       body: data
     });
     var status = await response.text();
+    events.emit('mainloading', false);
     if (status.indexOf('error') > -1) {
       this.setState({ message: 'Try again' })
     } else {
@@ -52,32 +55,37 @@ export class Initial extends Component {
     var FileInput = utils.FileInput;
     return (
       <div>
-        <h4 className="card-title">Card title</h4>
-        <FileInput onUploadStatusChange={this.onUploadStatusChange}></FileInput>
-        <div style={{ flexBasis: '100%' }}></div>
-        <button
-          type="button"
-          className="btn btn-outline-secondary w-f-c"
-          style={{ margin: '0 auto'}}
-          onClick={this.onClickConstruct}
-          disabled={!this.state.uploaded}
-          >
-          Construct Inverted Indicies
-        </button>
-        {this.state.message ? <div className="mt-2">
-            <div class="alert alert-warning" role="alert">
-              <strong>Error!</strong>
-              <div><p>{this.state.message}</p></div>
-              <div>
-                <button
-                  type="button"
-                  class="btn btn-outline-dark btn-sm"
-                  onClick={() => this.setState({ message: '' })}>
-                  Got it
-                </button>
+        <div style={{ display: this.state.loading ? 'block': 'none' }}>
+          <i className="spin fa fa-spinner"></i>
+        </div>
+        <div style={{ display: this.state.loading ? 'none': 'block' }}>
+          <h4 className="card-title">Load Engine</h4>
+          <FileInput onUploadStatusChange={this.onUploadStatusChange}></FileInput>
+          <div style={{ flexBasis: '100%' }}></div>
+          <button
+            type="button"
+            className="btn btn-outline-secondary w-f-c"
+            style={{ margin: '0 auto'}}
+            onClick={this.onClickConstruct}
+            disabled={!this.state.uploaded}
+            >
+            Construct Inverted Indicies
+          </button>
+          {this.state.message ? <div className="mt-2">
+              <div class="alert alert-warning" role="alert">
+                <strong>Error!</strong>
+                <div><p>{this.state.message}</p></div>
+                <div>
+                  <button
+                    type="button"
+                    class="btn btn-outline-dark btn-sm"
+                    onClick={() => this.setState({ message: '' })}>
+                    Got it
+                  </button>
+                </div>
               </div>
-            </div>
-          </div> : null}
+            </div> : null}
+        </div>
       </div>
     );
   }

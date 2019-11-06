@@ -24,7 +24,8 @@ public class App extends AbstractVerticle {
   private SSH ssh;
   public void start() {
     ssh = new SSH();
-    ssh.connect("unixs.cssd.pitt.edu", "daa85");
+    // ssh.connect("unixs.cssd.pitt.edu", "daa85");
+    ssh.connect("ric-edge-01.sci.pitt.edu", "daa85");
 
     Router uploadRouter = Router.router(vertx);
     uploadRouter.route().handler(BodyHandler.create());
@@ -44,6 +45,14 @@ public class App extends AbstractVerticle {
           Path to = Paths.get("file-uploads", f.fileName());
           LOGGER.error("moving from " + from + " to " + to);
           Path temp = Files.move(from, to, StandardCopyOption.REPLACE_EXISTING);
+          LOGGER.error("Uploading: " + to.toString());
+
+          try {
+            ssh.upload(to.toString(), null);
+          } catch (Exception e) {
+            LOGGER.error("ok bad");
+            LOGGER.error(e.toString());
+          }
         }
         LOGGER.error("have counter " + counter + " and size " + ctx.fileUploads().size());
 
