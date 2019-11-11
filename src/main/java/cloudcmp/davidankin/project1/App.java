@@ -47,18 +47,25 @@ public class App extends AbstractVerticle {
           Path temp = Files.move(from, to, StandardCopyOption.REPLACE_EXISTING);
           LOGGER.error("Uploading: " + to.toString());
 
-          try {
-            ssh.upload(to.toString(), null);
-          } catch (Exception e) {
-            LOGGER.error("ok bad");
-            LOGGER.error(e.toString());
-          }
+          boolean success = ssh.upload(to.toString(), null);
+          if (!success)
+            LOGGER.error("Failed to Upload files in uploadRouter /");
+          throw new Exception();
         }
-        LOGGER.error("have counter " + counter + " and size " + ctx.fileUploads().size());
+
+        LOGGER.error("Uploaded " + counter + " files.");
+
+        String cmd = "./collectDataAndConstruct.sh";
+        String output = ssh.run(cmd);
+        if (output == null) {
+          throw new Exception("Failed to run " + cmd + " in uploadRouter /");
+        }
+
+        LOGGER.error("Ran " + cmd + " on cluster.");
 
         ctx.response()
           .putHeader("content-type", "text/plain")
-          .end("hey " + counter);
+          .end("counter:" + counter + ":" + output);
       } catch (Exception e) {
         LOGGER.error("Caught exception");
         e.printStackTrace();
