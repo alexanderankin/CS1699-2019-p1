@@ -100,7 +100,7 @@ public class SSH {
       LOGGER.error("Connected SSH");
 
       client.useCompression();
-      client.newSCPFileTransfer().upload(new FileSystemFile(from), "~/" + from);
+      client.newSCPFileTransfer().upload(new FileSystemFile(from), to);
     } catch (Exception e) {
       LOGGER.error("Error uploading fr:" + from + " to:" + to + " on " + host);
       LOGGER.error(e.toString());

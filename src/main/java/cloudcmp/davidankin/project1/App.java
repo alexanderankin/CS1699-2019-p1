@@ -23,34 +23,33 @@ public class App extends AbstractVerticle {
   private final Logger LOGGER = LoggerFactory.getLogger(App.class);
   private SSH ssh;
   public void start() {
+    LOGGER.info("HELLO WORLD");
     ssh = new SSH();
-    // ssh.connect("unixs.cssd.pitt.edu", "daa85");
-    ssh.connect("ric-edge-01.sci.pitt.edu", "daa85");
+    ssh.connect("unixs.cssd.pitt.edu", "daa85");
+    // ssh.connect("ric-edge-01.sci.pitt.edu", "daa85");
 
     Router uploadRouter = Router.router(vertx);
     uploadRouter.route().handler(BodyHandler.create());
     uploadRouter.post("/").blockingHandler(ctx -> {
-      LOGGER.error("have post route");
       int counter = 0;
       try {
         for (FileUpload f: ctx.fileUploads()) {
           counter++;
-          LOGGER.error("contentType:      " + f.contentType());
-          LOGGER.error("fileName:         " + f.fileName());
-          LOGGER.error("name:             " + f.name());
-          LOGGER.error("size:             " + f.size());
-          LOGGER.error("uploadedFileName: " + f.uploadedFileName());
+          LOGGER.info("contentType:      " + f.contentType());
+          LOGGER.info("fileName:         " + f.fileName());
+          LOGGER.info("name:             " + f.name());
+          LOGGER.info("size:             " + f.size());
+          LOGGER.info("uploadedFileName: " + f.uploadedFileName());
 
           Path from = Paths.get(f.uploadedFileName());
           Path to = Paths.get("file-uploads", f.fileName());
-          LOGGER.error("moving from " + from + " to " + to);
+          LOGGER.info("moving from " + from + " to " + to);
           Path temp = Files.move(from, to, StandardCopyOption.REPLACE_EXISTING);
-          LOGGER.error("Uploading: " + to.toString());
+          LOGGER.info("Uploading: " + to.toString());
 
-          boolean success = ssh.upload(to.toString(), null);
+          boolean success = ssh.upload(to.toString(), f.fileName());
           if (!success)
-            LOGGER.error("Failed to Upload files in uploadRouter /");
-          throw new Exception();
+            LOGGER.error("Failed to Upload files in uploadRouter");
         }
 
         LOGGER.error("Uploaded " + counter + " files.");
@@ -61,7 +60,7 @@ public class App extends AbstractVerticle {
           throw new Exception("Failed to run " + cmd + " in uploadRouter /");
         }
 
-        LOGGER.error("Ran " + cmd + " on cluster.");
+        LOGGER.info("Ran " + cmd + " on cluster.");
 
         ctx.response()
           .putHeader("content-type", "text/plain")
@@ -86,7 +85,7 @@ public class App extends AbstractVerticle {
         .end("Hello from Vert.x!");
     });
     router.post("/json").handler(BodyHandler.create()).handler(req -> {
-      LOGGER.error("uploading");
+      LOGGER.info("uploading");
       try {
         ssh.upload("/home/toor/examples.desktop", null);
       } catch (Exception e) {
