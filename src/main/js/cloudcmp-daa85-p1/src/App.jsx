@@ -26,11 +26,7 @@ class App extends Component {
             <div className="card">
               <div className="card-body">
                 <p>Daa85 Search Engine</p>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100vh - 210px)' }}>
-                  <div style={{textAlign: 'center', alignItems: 'center'}}>
-                  <Home state={this.state}></Home>
-                  </div>
-                </div>
+                <Home state={this.state} />
               </div>
             </div>
           </div>

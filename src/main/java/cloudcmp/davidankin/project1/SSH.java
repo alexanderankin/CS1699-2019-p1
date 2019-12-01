@@ -26,6 +26,7 @@ public class SSH {
   }
 
   private String host;
+  private int port;
   private String username;
   private PasswordFinder passwordFinder;
 
@@ -42,29 +43,46 @@ public class SSH {
   }
 
   public void connect(String host, String username) {
+    connect(host, username, 22);
+  }
+
+  public void connect(String host, String username, int port) {
     this.host = host;
     this.username = username;
+    this.port = port;
   }
 
   /**
    * @return Output (or null on failure)
    */
-  public String run(String command) {
+  public Output run(String command) {
     SSHClient client = new SSHClient();
     client.addHostKeyVerifier(new PromiscuousVerifier());
     Session session = null;
+
     LOGGER.error("Connecting");
     try {
-      client.connect(host);
+      client.connect(host, port);
       client.authPassword(this.username, this.passwordFinder);
       LOGGER.error("Connected Client");
+
       session = client.startSession();
       LOGGER.error("Connected Session");
+
       final Command cmd = session.exec(command);
-      String output = IOUtils.readFully(cmd.getInputStream()).toString();
-      LOGGER.error("Read InputStream fully");
+      String standardOut = IOUtils.readFully(cmd.getInputStream()).toString();
+      String standardErr = IOUtils.readFully(cmd.getErrorStream()).toString();
+
+      LOGGER.error("Read Input and Error Streams fully");
+
+      // wait
       cmd.join();
-      output += ("\n** exit status: " + cmd.getExitStatus());
+      
+      Output output = new Output();
+      output.standardOut = standardOut;
+      output.standardErr = standardErr;
+      output.code = cmd.getExitStatus();
+
       return output;
     } catch (Exception e) {
       LOGGER.error("Error with command " + command);
@@ -87,6 +105,7 @@ public class SSH {
         LOGGER.error(e.toString());
       }
     }
+
     return null;
   }
 
@@ -101,6 +120,7 @@ public class SSH {
 
       client.useCompression();
       client.newSCPFileTransfer().upload(new FileSystemFile(from), to);
+      return false;
     } catch (Exception e) {
       LOGGER.error("Error uploading fr:" + from + " to:" + to + " on " + host);
       LOGGER.error(e.toString());

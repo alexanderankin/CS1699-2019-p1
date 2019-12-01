@@ -1,6 +1,7 @@
 package cloudcmp.davidankin.project1;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
@@ -9,11 +10,15 @@ import io.vertx.ext.web.handler.LoggerHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.handler.BodyHandler;
 
+import io.vertx.core.http.HttpServerRequest;
+
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
-import java.util.Set;
+import java.util.Base64;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,8 +30,10 @@ public class App extends AbstractVerticle {
   public void start() {
     LOGGER.info("HELLO WORLD");
     ssh = new SSH();
-    ssh.connect("unixs.cssd.pitt.edu", "daa85");
-    // ssh.connect("ric-edge-01.sci.pitt.edu", "daa85");
+    // ssh.connect("unixs.cssd.pitt.edu", "daa85");
+    ssh.connect("ric-edge-01.sci.pitt.edu", "daa85");
+
+    // System.out.println(ssh.run("cat collectedResults | grep -P \"^too\\t\"").standardOut);
 
     Router uploadRouter = Router.router(vertx);
     uploadRouter.route().handler(BodyHandler.create());
@@ -54,23 +61,39 @@ public class App extends AbstractVerticle {
 
         LOGGER.error("Uploaded " + counter + " files.");
 
-        String cmd = "./collectDataAndConstruct.sh";
-        String output = ssh.run(cmd);
+        String cmd = "./wholething.sh";
+        Output output = ssh.run(cmd);
         if (output == null) {
           throw new Exception("Failed to run " + cmd + " in uploadRouter /");
         }
 
-        LOGGER.info("Ran " + cmd + " on cluster.");
+        LOGGER.info("Ran " + cmd + " on cluster, returned code " + output.code);
+
+        if (output.code != 0) {
+          throw new Exception(output.standardOut);
+        }
+
+        String successResponse = new JsonObject()
+          .put("counter", counter)
+          .put("output", output.standardOut)
+          .toString();
 
         ctx.response()
-          .putHeader("content-type", "text/plain")
-          .end("counter:" + counter + ":" + output);
+          .putHeader("content-type", "application/json")
+          .end(successResponse);
       } catch (Exception e) {
         LOGGER.error("Caught exception");
         e.printStackTrace();
+
+        String errorResponse = new JsonObject()
+          .put("error", true)
+          .put("counter", counter)
+          .put("output", e.getMessage())
+          .toString();
+
         ctx.response()
-          .putHeader("content-type", "text/plain")
-          .end("error");
+          .putHeader("content-type", "application/json")
+          .end(errorResponse);
       }
     });
 
@@ -79,6 +102,42 @@ public class App extends AbstractVerticle {
     mainRouter.mountSubRouter("/upload", uploadRouter);
 
     Router router = mainRouter;
+    router.get("/word").handler(ctx -> {
+      HttpServerRequest request = ctx.request();
+      MultiMap params = request.params();
+      List<String> param = params.getAll("queryWord");
+      LOGGER.info("In route /word looking up word: " + param.get(0));
+      if (param.size() == 0) {
+        ctx.response().putHeader("content-type", "application/json").end("{\"error\":\"No input provided for ?queryWord=\"}");
+      } else {
+        Query searchQuery = new SearchQuery(ssh);
+        String output = searchQuery.word(param.get(0));
+        if (output == null)
+          ctx.response().putHeader("content-type", "application/json").end("{\"error\":\"Not Found\"}");
+        else {
+          String encoded = Base64.getEncoder().encodeToString(output.getBytes());
+          ctx.response().putHeader("content-type", "application/json").end("{\"success\":1,\"data\":\"" + encoded + "\"}");
+        }
+      }
+    });
+    router.get("/top").handler(ctx -> {
+      HttpServerRequest request = ctx.request();
+      MultiMap params = request.params();
+      List<String> param = params.getAll("queryTop");
+      if (param.size() == 0) {
+        ctx.response().putHeader("content-type", "application/json").end("{\"error\":\"No input provided for ?queryTop=\"}");
+      } else {
+        Query topQuery = new TopQuery(ssh);
+        String output = topQuery.word(param.get(0));
+        LOGGER.info("output is " + output);
+        if (output == null)
+          ctx.response().putHeader("content-type", "application/json").end("{\"error\":\"Not Found\"}");
+        else {
+          String encoded = Base64.getEncoder().encodeToString(output.getBytes());
+          ctx.response().putHeader("content-type", "application/json").end("{\"success\":1,\"data\":\"" + encoded + "\"}");
+        }
+      }
+    });
     router.route("/home").handler(req -> {
       req.response()
         .putHeader("content-type", "text/plain")
