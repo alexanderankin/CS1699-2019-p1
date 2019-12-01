@@ -4,7 +4,7 @@
 
 Make sure you install the [cluster_setup](cluster_setup) before running.
 
-[Docker](https://github.com/docker/docker-install)
+Install [Docker](https://github.com/docker/docker-install) and Maven locally (`sudo apt install maven -y`). If you don't wish to install maven locally, repeated runs of the program below will be very slow. To proceed without maven on the host machine, just do `mkdir ~/.m2`.
 
 ```
 export ssh_username='your username'
