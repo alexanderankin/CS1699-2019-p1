@@ -30,10 +30,7 @@ public class App extends AbstractVerticle {
   public void start() {
     LOGGER.info("HELLO WORLD");
     ssh = new SSH();
-    // ssh.connect("unixs.cssd.pitt.edu", "daa85");
-    ssh.connect("ric-edge-01.sci.pitt.edu", "daa85");
-
-    // System.out.println(ssh.run("cat collectedResults | grep -P \"^too\\t\"").standardOut);
+    ssh.connect("ric-edge-01.sci.pitt.edu", System.getenv("ssh_username"));
 
     Router uploadRouter = Router.router(vertx);
     uploadRouter.route().handler(BodyHandler.create());
